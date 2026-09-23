@@ -1,0 +1,92 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ananuri.SlotEngine", "src\Ananuri.SlotEngine\Ananuri.SlotEngine.csproj", "{303D3289-1543-5EE0-850B-AD32FB895E53}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ananuri.SlotEngine.Tests", "tests\Ananuri.SlotEngine.Tests\Ananuri.SlotEngine.Tests.csproj", "{ADEEC37B-4B7A-5B7A-94E2-1BED08137B27}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ananuri.SlotEngine.Simulator", "tools\Ananuri.SlotEngine.Simulator\Ananuri.SlotEngine.Simulator.csproj", "{BD555E42-DABA-5B9D-9BBF-4B8561B3DE86}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{B81CB9EC-8AC7-5B55-87DF-F1F815700057}"
+	ProjectSection(SolutionItems) = preProject
+		samples\FiveReelGame.json = samples\FiveReelGame.json
+		samples\CascadingGame.json = samples\CascadingGame.json
+		samples\CollectedSymbolsGame.json = samples\CollectedSymbolsGame.json
+		samples\FirstGame.json = samples\FirstGame.json
+		samples\PaylineGame.json = samples\PaylineGame.json
+		samples\TutorialExample.cs = samples\TutorialExample.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{7E97836E-DF7B-5743-AC56-6BE174CF85EB}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+		docs\start-here.md = docs\start-here.md
+		docs\glossary.md = docs\glossary.md
+		docs\first-round.md = docs\first-round.md
+		docs\create-a-game.md = docs\create-a-game.md
+		docs\integration.md = docs\integration.md
+		docs\results.md = docs\results.md
+		docs\configuration-reference.md = docs\configuration-reference.md
+		docs\troubleshooting.md = docs\troubleshooting.md
+		docs\architecture.md = docs\architecture.md
+		docs\engine-rules.md = docs\engine-rules.md
+		docs\plain-payline-rules.md = docs\plain-payline-rules.md
+		docs\implementation-guide.md = docs\implementation-guide.md
+		docs\verification.md = docs\verification.md
+		docs\simulation-and-math.md = docs\simulation-and-math.md
+		docs\reference-vectors.json = docs\reference-vectors.json
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{303D3289-1543-5EE0-850B-AD32FB895E53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{303D3289-1543-5EE0-850B-AD32FB895E53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{303D3289-1543-5EE0-850B-AD32FB895E53}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{303D3289-1543-5EE0-850B-AD32FB895E53}.Debug|x64.Build.0 = Debug|Any CPU
+		{303D3289-1543-5EE0-850B-AD32FB895E53}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{303D3289-1543-5EE0-850B-AD32FB895E53}.Debug|x86.Build.0 = Debug|Any CPU
+		{303D3289-1543-5EE0-850B-AD32FB895E53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{303D3289-1543-5EE0-850B-AD32FB895E53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{303D3289-1543-5EE0-850B-AD32FB895E53}.Release|x64.ActiveCfg = Release|Any CPU
+		{303D3289-1543-5EE0-850B-AD32FB895E53}.Release|x64.Build.0 = Release|Any CPU
+		{303D3289-1543-5EE0-850B-AD32FB895E53}.Release|x86.ActiveCfg = Release|Any CPU
+		{303D3289-1543-5EE0-850B-AD32FB895E53}.Release|x86.Build.0 = Release|Any CPU
+		{ADEEC37B-4B7A-5B7A-94E2-1BED08137B27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADEEC37B-4B7A-5B7A-94E2-1BED08137B27}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADEEC37B-4B7A-5B7A-94E2-1BED08137B27}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{ADEEC37B-4B7A-5B7A-94E2-1BED08137B27}.Debug|x64.Build.0 = Debug|Any CPU
+		{ADEEC37B-4B7A-5B7A-94E2-1BED08137B27}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{ADEEC37B-4B7A-5B7A-94E2-1BED08137B27}.Debug|x86.Build.0 = Debug|Any CPU
+		{ADEEC37B-4B7A-5B7A-94E2-1BED08137B27}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADEEC37B-4B7A-5B7A-94E2-1BED08137B27}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADEEC37B-4B7A-5B7A-94E2-1BED08137B27}.Release|x64.ActiveCfg = Release|Any CPU
+		{ADEEC37B-4B7A-5B7A-94E2-1BED08137B27}.Release|x64.Build.0 = Release|Any CPU
+		{ADEEC37B-4B7A-5B7A-94E2-1BED08137B27}.Release|x86.ActiveCfg = Release|Any CPU
+		{ADEEC37B-4B7A-5B7A-94E2-1BED08137B27}.Release|x86.Build.0 = Release|Any CPU
+		{BD555E42-DABA-5B9D-9BBF-4B8561B3DE86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD555E42-DABA-5B9D-9BBF-4B8561B3DE86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD555E42-DABA-5B9D-9BBF-4B8561B3DE86}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BD555E42-DABA-5B9D-9BBF-4B8561B3DE86}.Debug|x64.Build.0 = Debug|Any CPU
+		{BD555E42-DABA-5B9D-9BBF-4B8561B3DE86}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BD555E42-DABA-5B9D-9BBF-4B8561B3DE86}.Debug|x86.Build.0 = Debug|Any CPU
+		{BD555E42-DABA-5B9D-9BBF-4B8561B3DE86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD555E42-DABA-5B9D-9BBF-4B8561B3DE86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD555E42-DABA-5B9D-9BBF-4B8561B3DE86}.Release|x64.ActiveCfg = Release|Any CPU
+		{BD555E42-DABA-5B9D-9BBF-4B8561B3DE86}.Release|x64.Build.0 = Release|Any CPU
+		{BD555E42-DABA-5B9D-9BBF-4B8561B3DE86}.Release|x86.ActiveCfg = Release|Any CPU
+		{BD555E42-DABA-5B9D-9BBF-4B8561B3DE86}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

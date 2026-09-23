@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "profile": "slot-engine-v1",
+  "cascadePolicy": "none-v1",
+  "gameId": "tiny-verification-game",
+  "mathVersion": "1.0.0",
+  "visibleRows": 2,
+  "symbols": [1, 2, 3],
+  "reels": [[1, 1, 2, 3], [1, 1, 2, 3], [1, 1, 2, 3]],
+  "paylines": [{ "id": 0, "rows": [1, 1, 1] }],
+  "paytable": [
+    { "symbol": 1, "matchCount": 3, "multiplier": 6 },
+    { "symbol": 2, "matchCount": 3, "multiplier": 4 },
+    { "symbol": 3, "matchCount": 3, "multiplier": 4 }
+  ],
+  "allowedStakes": [100]
+}

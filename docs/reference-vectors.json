@@ -1,0 +1,7 @@
+[
+  {"stops": [0, 0, 0, 0, 0], "stakeUnits": 100, "middleRow": ["A", "A", "A", "B", "D"], "payoutUnits": 500},
+  {"stops": [0, 0, 0, 3, 0], "stakeUnits": 100, "middleRow": ["A", "A", "A", "A", "D"], "payoutUnits": 1000},
+  {"stops": [0, 0, 0, 3, 1], "stakeUnits": 100, "middleRow": ["A", "A", "A", "A", "A"], "payoutUnits": 2000},
+  {"stops": [1, 0, 0, 0, 0], "stakeUnits": 100, "middleRow": ["C", "A", "A", "B", "D"], "payoutUnits": 0},
+  {"stops": [0, 0, 1, 3, 1], "stakeUnits": 100, "middleRow": ["A", "A", "C", "A", "A"], "payoutUnits": 0}
+]

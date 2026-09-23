@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ananuri.SlotEngine.Tests" />
+    <ProjectReference Include="../../src/Ananuri.SlotEngine/Ananuri.SlotEngine.csproj" />
+    <Compile Include="../../samples/TutorialExample.cs" Link="Fixtures/TutorialExample.cs" />
+    <Content Include="../../samples/*.json" Link="Samples/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

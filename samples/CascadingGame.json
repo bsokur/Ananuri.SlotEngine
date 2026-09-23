@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "profile": "slot-engine-v1",
+  "cascadePolicy": "falling-symbols-v1",
+  "gameId": "cascading-wilds-example",
+  "mathVersion": "experimental-3",
+  "visibleRows": 4,
+  "symbols": [1, 2, 3, 4, 5, 6, 7, 8],
+  "reels": [
+    [8, 7, 1, 2, 3, 4, 5, 6, 2, 3, 1, 4, 2, 5, 6, 3],
+    [8, 1, 1, 3, 4, 5, 6, 2, 3, 4, 1, 5, 2, 6, 3, 7],
+    [8, 1, 1, 4, 5, 6, 2, 3, 4, 5, 1, 6, 2, 3, 7, 4],
+    [2, 1, 2, 5, 6, 3, 4, 5, 8, 6, 1, 3, 7, 4, 5, 6],
+    [3, 2, 2, 6, 4, 5, 3, 6, 8, 4, 1, 7, 5, 3, 6, 4]
+  ],
+  "paylines": [
+    { "id": 0, "rows": [0, 0, 0, 0, 0] },
+    { "id": 1, "rows": [1, 1, 1, 1, 1] },
+    { "id": 2, "rows": [2, 2, 2, 2, 2] },
+    { "id": 3, "rows": [3, 3, 3, 3, 3] }
+  ],
+  "paytable": [
+    { "symbol": 1, "matchCount": 3, "multiplier": 6 },
+    { "symbol": 1, "matchCount": 4, "multiplier": 12 },
+    { "symbol": 1, "matchCount": 5, "multiplier": 23 },
+    { "symbol": 2, "matchCount": 3, "multiplier": 5 },
+    { "symbol": 2, "matchCount": 4, "multiplier": 9 },
+    { "symbol": 2, "matchCount": 5, "multiplier": 18 },
+    { "symbol": 3, "matchCount": 3, "multiplier": 3 },
+    { "symbol": 3, "matchCount": 4, "multiplier": 7 },
+    { "symbol": 3, "matchCount": 5, "multiplier": 14 },
+    { "symbol": 4, "matchCount": 3, "multiplier": 3 },
+    { "symbol": 4, "matchCount": 4, "multiplier": 5 },
+    { "symbol": 4, "matchCount": 5, "multiplier": 9 },
+    { "symbol": 5, "matchCount": 3, "multiplier": 2 },
+    { "symbol": 5, "matchCount": 4, "multiplier": 5 },
+    { "symbol": 5, "matchCount": 5, "multiplier": 9 },
+    { "symbol": 6, "matchCount": 3, "multiplier": 2 },
+    { "symbol": 6, "matchCount": 4, "multiplier": 5 },
+    { "symbol": 6, "matchCount": 5, "multiplier": 9 }
+  ],
+  "allowedStakes": [100, 200, 500],
+  "paidRefillWeights": [
+    [{"symbol":1,"weight":12},{"symbol":2,"weight":16},{"symbol":3,"weight":18},{"symbol":4,"weight":18},{"symbol":5,"weight":18},{"symbol":6,"weight":18},{"symbol":7,"weight":1}],
+    [{"symbol":1,"weight":12},{"symbol":2,"weight":16},{"symbol":3,"weight":18},{"symbol":4,"weight":18},{"symbol":5,"weight":18},{"symbol":6,"weight":18},{"symbol":7,"weight":1}],
+    [{"symbol":1,"weight":12},{"symbol":2,"weight":16},{"symbol":3,"weight":18},{"symbol":4,"weight":18},{"symbol":5,"weight":18},{"symbol":6,"weight":18},{"symbol":7,"weight":1}],
+    [{"symbol":1,"weight":12},{"symbol":2,"weight":16},{"symbol":3,"weight":18},{"symbol":4,"weight":18},{"symbol":5,"weight":18},{"symbol":6,"weight":18},{"symbol":7,"weight":1}],
+    [{"symbol":1,"weight":12},{"symbol":2,"weight":16},{"symbol":3,"weight":18},{"symbol":4,"weight":18},{"symbol":5,"weight":18},{"symbol":6,"weight":18},{"symbol":7,"weight":1}]
+  ],
+  "wilds": { "symbols": [7], "substitutesFor": [1, 2, 3, 4, 5, 6] },
+  "symbolPriority": [1, 2, 3, 4, 5, 6],
+  "scatters": {
+    "symbol": 8,
+    "paidThresholds": [
+      { "minimumCount": 3, "freeSpins": 7, "totalStakeMultiplier": 1 },
+      { "minimumCount": 4, "freeSpins": 11, "totalStakeMultiplier": 2 },
+      { "minimumCount": 5, "freeSpins": 13, "totalStakeMultiplier": 5 }
+    ],
+    "freeThresholds": [ { "minimumCount": 3, "freeSpins": 3, "totalStakeMultiplier": 0 } ]
+  },
+  "maximumAwardedFreeSpins": 100,
+  "paidMultiplier": { "strategy": "constant-v1", "start": 1 },
+  "bonusMultiplier": {
+    "strategy": "paying-cascade-v1",
+    "start": 1,
+    "increment": 1,
+    "maximum": 3,
+    "persistence": "Bonus",
+    "includeInitialGrid": true
+  },
+  "roundWinLimitMultiplier": 5000
+}

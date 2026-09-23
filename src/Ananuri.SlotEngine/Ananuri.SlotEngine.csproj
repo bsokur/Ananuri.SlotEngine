@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Ananuri.SlotEngine</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Ananuri Interactive</Authors>
+    <Description>Deterministic fixed-payline and cascading games with configurable wilds, scatters, free spins, and multipliers.</Description>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" Visible="false" />
+    <None Include="../../docs/**/*.md" Pack="true" PackagePath="docs/" Visible="false" />
+    <None Include="../../docs/reference-vectors.json" Pack="true" PackagePath="docs/" Visible="false" />
+    <None Include="../../samples/*.json" Pack="true" PackagePath="samples/" Visible="false" />
+    <None Include="../../samples/TutorialExample.cs" Pack="true" PackagePath="samples/" Visible="false" />
+    <None Include="../../global.json" Pack="true" PackagePath="/" Visible="false" />
+  </ItemGroup>
+</Project>

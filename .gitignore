@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+TestResults/
+artifacts/
+.idea/
+tmp/
+experiments/
+tools/Ananuri.SlotEngine.Demo/
+tests/Ananuri.SlotEngine.Tests/Demo/

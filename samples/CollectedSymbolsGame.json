@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "profile": "slot-engine-v1",
+  "cascadePolicy": "falling-symbols-v1",
+  "gameId": "collected-multiplier-example",
+  "mathVersion": "experimental-1",
+  "visibleRows": 2,
+  "symbols": [1, 2, 3, 7, 8, 9],
+  "reels": [[8,1,9,2,1,3,7,2], [8,1,2,9,3,1,7,2], [8,1,3,2,9,1,2,7]],
+  "paylines": [{"id":0,"rows":[1,1,1]}],
+  "paytable": [{"symbol":1,"matchCount":3,"multiplier":5},{"symbol":2,"matchCount":3,"multiplier":3},{"symbol":3,"matchCount":3,"multiplier":2}],
+  "allowedStakes": [100],
+  "paidRefillWeights": [
+    [{"symbol":1,"weight":20},{"symbol":2,"weight":30},{"symbol":3,"weight":40},{"symbol":7,"weight":1},{"symbol":9,"weight":2}],
+    [{"symbol":1,"weight":20},{"symbol":2,"weight":30},{"symbol":3,"weight":40},{"symbol":7,"weight":1},{"symbol":9,"weight":2}],
+    [{"symbol":1,"weight":20},{"symbol":2,"weight":30},{"symbol":3,"weight":40},{"symbol":7,"weight":1},{"symbol":9,"weight":2}]
+  ],
+  "wilds": {"symbols":[7],"substitutesFor":[1,2,3]},
+  "scatters": {
+    "symbol":8,
+    "paidThresholds":[{"minimumCount":3,"freeSpins":5,"totalStakeMultiplier":0}],
+    "freeThresholds":[{"minimumCount":3,"freeSpins":2,"totalStakeMultiplier":0}]
+  },
+  "maximumAwardedFreeSpins": 30,
+  "paidMultiplier": {"strategy":"constant-v1","start":1},
+  "bonusMultiplier": {
+    "strategy":"collected-symbol-v1",
+    "start":1,
+    "maximum":50,
+    "persistence":"Bonus",
+    "collectionValues":[{"symbol":9,"value":2}],
+    "applyBeforeAward":true,
+    "requiresWin":false
+  },
+  "roundWinLimitMultiplier":5000
+}

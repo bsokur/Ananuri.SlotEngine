@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "profile": "slot-engine-v1",
+  "cascadePolicy": "falling-symbols-v1",
+  "gameId": "first-game-tutorial",
+  "mathVersion": "tutorial-1",
+  "visibleRows": 2,
+  "symbols": [1, 2, 3, 8],
+  "reels": [[8, 1, 3], [8, 1, 3], [8, 1, 3]],
+  "freeSpinReels": [[3, 2, 3], [3, 2, 3], [3, 2, 3]],
+  "paylines": [{ "id": 0, "rows": [1, 1, 1] }],
+  "paytable": [
+    { "symbol": 1, "matchCount": 3, "multiplier": 5 },
+    { "symbol": 2, "matchCount": 3, "multiplier": 3 }
+  ],
+  "allowedStakes": [100],
+  "paidRefillWeights": [
+    [{ "symbol": 3, "weight": 1 }],
+    [{ "symbol": 3, "weight": 1 }],
+    [{ "symbol": 3, "weight": 1 }]
+  ],
+  "scatters": {
+    "symbol": 8,
+    "paidThresholds": [{ "minimumCount": 3, "freeSpins": 2 }]
+  },
+  "maximumAwardedFreeSpins": 10,
+  "bonusMultiplier": {
+    "strategy": "paying-cascade-v1",
+    "start": 1,
+    "increment": 1,
+    "maximum": 3,
+    "persistence": "Bonus"
+  },
+  "roundWinLimitMultiplier": 50
+}

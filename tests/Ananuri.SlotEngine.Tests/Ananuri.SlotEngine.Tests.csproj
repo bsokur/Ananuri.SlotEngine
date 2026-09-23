@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <ProjectReference Include="../../src/Ananuri.SlotEngine/Ananuri.SlotEngine.csproj" />
+    <ProjectReference Include="../../tools/Ananuri.SlotEngine.Simulator/Ananuri.SlotEngine.Simulator.csproj" />
+    <EmbeddedResource Include="../../samples/FirstGame.json" LogicalName="FirstGame.json" />
+    <EmbeddedResource Include="../../samples/PaylineGame.json" LogicalName="PaylineGame.json" />
+    <EmbeddedResource Include="../../samples/FiveReelGame.json" LogicalName="FiveReelGame.json" />
+    <EmbeddedResource Include="../../samples/CascadingGame.json" LogicalName="CascadingGame.json" />
+    <EmbeddedResource Include="../../samples/CollectedSymbolsGame.json" LogicalName="CollectedSymbolsGame.json" />
+    <EmbeddedResource Include="../../docs/reference-vectors.json" LogicalName="reference-vectors.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Demo/**/*.cs" />
+  </ItemGroup>
+</Project>
