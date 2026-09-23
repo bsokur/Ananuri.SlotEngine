@@ -8,8 +8,13 @@ function Invoke-DotNet {
     param([string[]]$Arguments)
 
     Write-Host "Running: dotnet $($Arguments -join ' ')"
-    $output = & dotnet @Arguments 2>&1
-    $exitCode = $LASTEXITCODE
+    $previousErrorAction = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $output = & dotnet @Arguments 2>&1
+        $exitCode = $LASTEXITCODE
+    }
+    finally { $ErrorActionPreference = $previousErrorAction }
     foreach ($line in $output) { Write-Host $line }
     if ($exitCode -ne 0) {
         throw "dotnet $($Arguments -join ' ') failed with exit code $exitCode."
@@ -34,8 +39,13 @@ function Invoke-RejectedScenario {
     param([string[]]$Arguments)
 
     Write-Host "Checking expected rejection: dotnet $($Arguments -join ' ')"
-    $lines = & dotnet @Arguments 2>&1
-    $exitCode = $LASTEXITCODE
+    $previousErrorAction = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $lines = & dotnet @Arguments 2>&1
+        $exitCode = $LASTEXITCODE
+    }
+    finally { $ErrorActionPreference = $previousErrorAction }
     foreach ($line in $lines) { Write-Host $line }
     $output = $lines -join [Environment]::NewLine
     if ($exitCode -ne 1 -or $output -notmatch 'the round is unfinished') {
@@ -116,13 +126,15 @@ function Test-GameMathDocumentation {
     $timing = if ($scatter.PSObject.Properties['timing']) { $scatter.timing } else { 'InitialGrid' }
     $multiply = if ($game.PSObject.Properties['multiplyScatterAwards']) { $game.multiplyScatterAwards } else { $false }
     $refills = if ($game.PSObject.Properties['allowScatterRefills']) { $game.allowScatterRefills } else { $false }
-    $paid = ($scatter.paidThresholds | ForEach-Object { "$($_.minimumCount) → $($_.freeSpins) + $($_.totalStakeMultiplier)x" }) -join '; '
-    $free = ($scatter.freeThresholds | ForEach-Object { "$($_.minimumCount) → $($_.freeSpins) + $($_.totalStakeMultiplier)x" }) -join '; '
+    $arrow = [char]0x2192
+    $times = [char]0x00D7
+    $paid = ($scatter.paidThresholds | ForEach-Object { "$($_.minimumCount) $arrow $($_.freeSpins) + $($_.totalStakeMultiplier)x" }) -join '; '
+    $free = ($scatter.freeThresholds | ForEach-Object { "$($_.minimumCount) $arrow $($_.freeSpins) + $($_.totalStakeMultiplier)x" }) -join '; '
     $rows = @(
         '| Setting | Current value |', '| --- | --- |',
         ('| Game ID | `' + $game.gameId + '` |'),
         ('| Math version | `' + $game.mathVersion + '` |'),
-        "| Board | $($game.reels.Count) reels × $($game.visibleRows) rows |",
+        "| Board | $($game.reels.Count) reels $times $($game.visibleRows) rows |",
         "| Payline rows (left to right) | $(($game.paylines | ForEach-Object { $_.rows -join '/' }) -join '; ') |",
         "| Allowed stakes | $($game.allowedStakes -join ', ') |",
         "| Wild symbols / substitution targets | $($game.wilds.symbols -join ', ') / $($game.wilds.substitutesFor -join ', ') |")
@@ -133,8 +145,8 @@ function Test-GameMathDocumentation {
     $bonus = $game.bonusMultiplier
     $rows += @(
         "| Scatter symbol / timing | $($scatter.symbol) / $timing |",
-        "| Paid scatters: minimum count → spins + total-stake cash | $paid |",
-        "| Free scatters: minimum count → spins + total-stake cash | $free |",
+        "| Paid scatters: minimum count $arrow spins + total-stake cash | $paid |",
+        "| Free scatters: minimum count $arrow spins + total-stake cash | $free |",
         "| Multiply scatter cash | $multiply |",
         "| Allow scatter refills | $refills |",
         "| Maximum lifetime awarded free spins | $($game.maximumAwardedFreeSpins) |",
@@ -189,6 +201,8 @@ function Copy-PackageText {
 function Test-PackagedExamples {
     param([string]$Repository, [string]$Simulator)
 
+    Add-Type -AssemblyName System.IO.Compression
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
     $packagePath = Join-Path $Repository 'artifacts/Ananuri.SlotEngine.0.1.0.nupkg'
     $archive = [IO.Compression.ZipFile]::OpenRead($packagePath)
     $temporaryRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
