@@ -1,6 +1,6 @@
 # Read results, checkpoints, and bonus state
 
-Start with [the worked round](first-round.md). The following field names are the C#
+Start with [the teaching round](start-here.md#4-understand-what-happened). The following field names are the C#
 names exposed by the unified engine API. Default state serialization preserves these names;
 game-package JSON uses different camelCase transport fields.
 

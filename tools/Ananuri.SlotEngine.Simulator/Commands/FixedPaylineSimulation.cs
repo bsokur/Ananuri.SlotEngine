@@ -3,6 +3,8 @@ using Ananuri.SlotEngine.Definitions;
 using Ananuri.SlotEngine.Grid;
 using Ananuri.SlotEngine.Randomness;
 using Ananuri.SlotEngine.Simulator.Execution;
+using Ananuri.SlotEngine.Simulator.Reporting;
+using Ananuri.SlotEngine.Simulator.Statistics;
 using Ananuri.SlotEngine.Spins;
 
 namespace Ananuri.SlotEngine.Simulator.Commands;
@@ -44,15 +46,7 @@ internal static class FixedPaylineSimulation
         }
         timer.Stop();
         cancellationToken.ThrowIfCancellationRequested();
-        Console.WriteLine(heading);
-        Console.WriteLine($"Engine: {SlotEngine.EngineVersion}");
-        Console.WriteLine($"Game: {game.GameId}; math: {game.MathVersion}; rules: {SlotEngine.RulesVersion}");
-        Console.WriteLine($"Observations: {statistics.Observations}");
-        Console.WriteLine($"Stake: {statistics.TotalStake}; payout: {statistics.TotalPayout}");
-        Console.WriteLine($"RTP: {statistics.RtpPercent:F6}%");
-        Console.WriteLine($"Hit frequency (any payout): {statistics.HitPercent:F6}%");
-        foreach (var pair in statistics.Distribution) Console.WriteLine($"Payout {pair.Key}: {pair.Value} outcomes");
-        Console.WriteLine($"Processed in: {timer.Elapsed.TotalMilliseconds:F3} ms");
+        PaylineReport.PrintSummary(game, statistics, heading, timer.Elapsed);
     }
 
     internal static PaylineStatistics Enumerate(GameDefinition game, int maxCombinations = DefaultMaxCombinations,
@@ -125,32 +119,6 @@ internal static class FixedPaylineSimulation
         var result = SpinExecutor.EvaluateComplete(new SlotEngine(), game, request,
             new FixedReelStops(game, new int[game.ReelCount]), new RoundExecutionBudget(cancellationToken: cancellationToken));
         timer.Stop();
-        Console.WriteLine($"Game: {result.GameId} / math {result.MathVersion}");
-        Console.WriteLine($"Engine: {result.EngineVersion} / rules {result.RulesVersion}");
-        var grid = result.Steps[0].Grid;
-        for (int row = 0; row < grid.RowCount; row++)
-            Console.WriteLine(string.Join(" ", Enumerable.Range(0, grid.ReelCount).Select(reel => grid[reel, row].Symbol.Value)));
-        Console.WriteLine($"Stake: {result.ChargedStakeUnits}; payout: {result.TotalPayoutUnits}");
-        Console.WriteLine($"Processed in: {timer.Elapsed.TotalMilliseconds:F3} ms");
-    }
-}
-
-internal sealed class PaylineStatistics
-{
-    internal long Observations { get; private set; }
-    internal long Hits { get; private set; }
-    internal decimal TotalStake { get; private set; }
-    internal decimal TotalPayout { get; private set; }
-    internal SortedDictionary<long, long> Distribution { get; } = [];
-    internal decimal RtpPercent => TotalStake > 0 ? 100m * TotalPayout / TotalStake : 0;
-    internal decimal HitPercent => Observations > 0 ? 100m * Hits / Observations : 0;
-
-    internal void Observe(SpinEvaluation result)
-    {
-        Observations++;
-        TotalStake += result.ChargedStakeUnits;
-        TotalPayout += result.TotalPayoutUnits;
-        if (result.TotalPayoutUnits > 0) Hits++;
-        Distribution[result.TotalPayoutUnits] = Distribution.GetValueOrDefault(result.TotalPayoutUnits) + 1;
+        PaylineReport.PrintDemo(result, timer.Elapsed);
     }
 }

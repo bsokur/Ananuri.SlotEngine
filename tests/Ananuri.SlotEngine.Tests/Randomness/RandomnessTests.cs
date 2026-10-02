@@ -66,4 +66,32 @@ public sealed class RandomnessTests
     [InlineData(4)]
     public void RandomDrawOutsideBound_ShouldFailWithoutBecomingLoss(int value) =>
         Assert.Throws<InvalidOperationException>(() => _engine.Evaluate(Fixture(), new("id", 100), new Tape(value)));
+
+    [Fact]
+    public void ExhaustedDrawOrdinal_ShouldFailBeforeAllocatingRandomness()
+    {
+        var tape = new Tape(0);
+        var sequence = new DrawSequence("exhausted", tape, long.MaxValue);
+
+        Assert.Throws<OverflowException>(() => sequence.Next("refill", 1));
+
+        Assert.Equal(0, tape.Used);
+        Assert.Equal(long.MaxValue, sequence.NextOrdinal);
+    }
+
+    [Fact]
+    public void LastRepresentableDraw_ShouldBeRecordedAndReplayable()
+    {
+        var recording = new RecordingDrawSource(new Tape(1));
+        var sequence = new DrawSequence("last-draw", recording, long.MaxValue - 1);
+
+        Assert.Equal(1, sequence.Next("refill", 2));
+
+        Assert.Equal(long.MaxValue, sequence.NextOrdinal);
+        var recorded = Assert.Single(recording.Snapshot());
+        Assert.Equal(long.MaxValue - 1, recorded.Request.Ordinal);
+        var replay = new DrawSequence("last-draw", new ReplayDrawSource(recording.Snapshot()), long.MaxValue - 1);
+        Assert.Equal(1, replay.Next("refill", 2));
+        Assert.Equal(sequence.NextOrdinal, replay.NextOrdinal);
+    }
 }

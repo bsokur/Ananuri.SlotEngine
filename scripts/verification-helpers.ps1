@@ -100,7 +100,8 @@ function Test-PackageContents {
 
     $entries = @($Archive.Entries | ForEach-Object { $_.FullName })
     $required = @('lib/net10.0/Ananuri.SlotEngine.dll', 'lib/net10.0/Ananuri.SlotEngine.xml',
-        'README.md', 'global.json', 'docs/reference-vectors.json', 'samples/TutorialExample.cs')
+        'README.md', 'global.json', 'docs/reference-vectors.json', 'samples/TutorialExample.cs',
+        'samples/CustomMultiplierExample.cs')
     $required += @(Get-ChildItem -LiteralPath (Join-Path $Repository 'docs') -Filter '*.md' -File |
         ForEach-Object { 'docs/' + $_.Name })
     $required += @('FiveReelGame', 'PaylineGame', 'FirstGame', 'CascadingGame', 'CollectedSymbolsGame') |
@@ -163,33 +164,6 @@ function Test-GameMathDocumentation {
     return "Game: $($game.gameId); math: $($game.mathVersion); fingerprint: $($identity[0].Groups[1].Value)"
 }
 
-function Get-EngineRuleCompilationProgram {
-    param([string]$Repository)
-
-    $document = [IO.File]::ReadAllText((Join-Path $Repository 'docs/engine-rules.md'))
-    $fragments = @(Get-MarkdownCodeBlocks $document 'csharp')
-    if ($fragments.Count -ne 2) { throw 'Expected two host fragments in engine-rules.md.' }
-    $imports = [regex]::Matches($fragments[0], '(?m)^using [^;]+;\r?$').Value -join "`n"
-    $load = [regex]::Replace($fragments[0], '(?m)^using [^;]+;\r?\n', '')
-    return @"
-$imports
-
-internal static class DocumentedFragments
-{
-    static void Main() { }
-    static void Load(IRandomDrawSource runtimeDrawSource)
-    {
-$load
-    }
-    static void Resume(ISlotEngine engine, Ananuri.SlotEngine.Definitions.GameDefinition game,
-        SpinRequest request, IRandomDrawSource draws)
-    {
-$($fragments[1])
-    }
-}
-"@
-}
-
 function Copy-PackageText {
     param([IO.Compression.ZipArchive]$Archive, [string]$Entry, [string]$Destination)
 
@@ -221,7 +195,10 @@ function Test-PackagedExamples {
         $integration = [IO.File]::ReadAllText((Join-Path $Repository 'docs/integration.md'))
         $programs = @(Get-MarkdownCodeBlocks $integration 'csharp')
         if ($programs.Count -ne 2) { throw 'Expected both complete C# programs in integration.md.' }
-        $programs += Get-EngineRuleCompilationProgram $Repository
+        $customPolicy = [IO.File]::ReadAllText((Join-Path $Repository 'docs/architecture.md'))
+        $customPrograms = @(Get-MarkdownCodeBlocks $customPolicy 'csharp')
+        if ($customPrograms.Count -ne 1) { throw 'Expected one complete custom-policy host program in architecture.md.' }
+        $programs += $customPrograms
         for ($index = 0; $index -lt $programs.Count; $index++) {
             $hostPath = Join-Path $work "Host$index"
             $null = New-Item -ItemType Directory -Path $hostPath
@@ -244,10 +221,18 @@ function Test-PackagedExamples {
                 Copy-PackageText $archive 'samples/FirstGame.json' $samplePath
                 $runArguments += @('--', $samplePath)
             }
+            elseif ($index -eq 2) {
+                Copy-PackageText $archive 'samples/CustomMultiplierExample.cs' (Join-Path $hostPath 'CustomMultiplierExample.cs')
+            }
             # An isolated cache forces NuGet to consume the package just produced, even
             # while this initial release keeps the same 0.1.0 version during development.
             $null = Invoke-DotNet @('restore', $project, '--configfile', $configPath, '--packages', (Join-Path $work 'packages'))
-            $expected = if ($index -eq 0) { $TutorialExpectedLines } elseif ($index -eq 1) { @('Payout: 500') } else { @() }
+            $expected = switch ($index) {
+                0 { $TutorialExpectedLines }
+                1 { 'Payout: 500' }
+                2 { 'Payout: 700' }
+                default { @() }
+            }
             Invoke-CheckedScenario $runArguments $expected
         }
 
@@ -259,31 +244,6 @@ function Test-PackagedExamples {
         Invoke-CheckedScenario @($Simulator, 'game-demo', $examplePath) @(
             'Charged stake: 100; base payout: 500; bonus payout: 0',
             'Replay verified: 1 evaluations; 3 recorded draws.')
-
-        $tutorial = [IO.File]::ReadAllText((Join-Path $Repository 'docs/create-a-game.md'))
-        $commands = @(Get-MarkdownCodeBlocks $tutorial 'powershell')
-        if ($commands.Count -ne 3 -or $tutorial -match 'samples/MyGame\.json') {
-            throw 'Expected three tutorial command blocks with experiments outside the shipped samples.'
-        }
-        $null = New-Item -ItemType Directory -Path (Join-Path $work 'samples')
-        Copy-PackageText $archive 'samples/FirstGame.json' (Join-Path $work 'samples/FirstGame.json')
-        Push-Location $work
-        try { & ([scriptblock]::Create($commands[0])) }
-        finally { Pop-Location }
-        $experimentPath = Join-Path $work 'experiments/MyGame.json'
-        $experiment = Get-Content -LiteralPath $experimentPath -Raw | ConvertFrom-Json
-        $experiment.gameId = 'my-first-game'
-        $experiment.mathVersion = 'experiment-1'
-        ($experiment.paytable | Where-Object symbol -eq 1).multiplier = 6
-        $experiment | ConvertTo-Json -Depth 32 | Set-Content -LiteralPath $experimentPath
-        Invoke-CheckedScenario @($Simulator, 'tutorial', $experimentPath) @(
-            'tutorial/0: mode=Paid; charged=100; spin payout=600; round payout=600; remaining free spins=2',
-            'tutorial/1: mode=Free; charged=0; spin payout=300; round payout=900; remaining free spins=1',
-            'tutorial/2: mode=Free; charged=0; spin payout=600; round payout=1500; remaining free spins=0',
-            'Replay verified: 3 evaluations; 18 draws.')
-        if (@(Get-ChildItem -LiteralPath (Join-Path $work 'samples') -Filter '*.json').Count -ne 1) {
-            throw 'The tutorial added an experiment to the shipped samples directory.'
-        }
 
         # Exercise default sample lookup independently of the source checkout's cwd.
         Push-Location $work
@@ -308,4 +268,3 @@ function Test-PackagedExamples {
         if (Test-Path -LiteralPath $resolvedWork) { Remove-Item -LiteralPath $resolvedWork -Recurse -Force }
     }
 }
-

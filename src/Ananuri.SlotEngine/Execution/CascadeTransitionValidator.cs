@@ -14,7 +14,7 @@ internal static class CascadeTransitionValidator
             || transition.NextInstanceId < nextInstanceId)
             throw new InvalidOperationException("Cascade policy returned incomplete or inconsistent transition evidence.");
 
-        SpinExecutionValidator.ValidateBoard(game, transition.Grid, transition.NextInstanceId);
+        SymbolBoardValidator.Validate(game, transition.Grid, transition.NextInstanceId);
         var removedIds = removed.Select(p => before[p.Reel, p.Row].Id).ToHashSet();
         var survivors = new Dictionary<long, (SymbolInstance Cell, GridPosition Position)>();
         for (int reel = 0; reel < before.ReelCount; reel++)

@@ -21,6 +21,7 @@ public sealed class FallingSymbolsCascade : ICascadePolicy
     {
         var unique = removed.Distinct().OrderBy(p => p.Reel).ThenBy(p => p.Row).ToImmutableArray();
         foreach (var p in unique) _ = grid[p.Reel, p.Row];
+        long nextInstanceIdAfterRefill = checked(nextInstanceId + unique.Length);
         var removal = unique.ToHashSet();
         var cells = grid.Cells.ToArray();
         var moves = ImmutableArray.CreateBuilder<SymbolMovement>();
@@ -43,6 +44,6 @@ public sealed class FallingSymbolsCascade : ICascadePolicy
                 arrivals.Add(new(cell, new(reel, row)));
             }
         }
-        return new(new SymbolBoard(grid.ReelCount, grid.RowCount, cells), unique, moves.ToImmutable(), arrivals.ToImmutable(), nextInstanceId);
+        return new(new SymbolBoard(grid.ReelCount, grid.RowCount, cells), unique, moves.ToImmutable(), arrivals.ToImmutable(), nextInstanceIdAfterRefill);
     }
 }

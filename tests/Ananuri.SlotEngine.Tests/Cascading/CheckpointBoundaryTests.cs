@@ -47,7 +47,10 @@ public sealed class CheckpointBoundaryTests
 
         var replay = new ReplayDrawSource(recording.Snapshot());
         var part = engine.Evaluate(game, request, replay, budget);
-        Assert.NotNull(part.Continuation);
+        var checkpoint = Assert.IsType<SpinContinuation>(part.Continuation);
+        Assert.Null(part.NextBonus);
+        Assert.Equal(0, part.GrantedFreeSpins);
+        Assert.Equal(repeatGrants && budget == 2 ? 4 : 2, checkpoint.PendingFreeSpins);
         var steps = part.Steps.ToBuilder();
         while (part.Continuation is not null)
         {

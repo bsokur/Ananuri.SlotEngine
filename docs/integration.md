@@ -36,7 +36,7 @@ dotnet run --project ../SlotEngineTutorialHost -- ../SlotEngineTutorialHost/Firs
 ```
 
 You should see the same 500, 300, and 600 spin payouts, 1,400 final total, and successful
-18-draw replay shown in [the worked round](first-round.md). The JSON path is relative
+18-draw replay shown in [the teaching round](start-here.md#4-understand-what-happened). The JSON path is relative
 to the terminal's current directory, not the project file. An absolute path works too.
 
 The copied sample is teaching code, not part of the library's public NuGet API. The
@@ -158,7 +158,7 @@ stop requests only and rejects refill requests. When providing stops for a free
 spin, construct it with `SpinMode.Free` so it validates against the free-spin strips.
 The supplied stops are known teaching inputs; a host must select stops according
 to its intended random model. Use a general `IRandomDrawSource` for cascades.
-Read [plain-payline rules](plain-payline-rules.md) before adapting this example.
+Read [grid and award rules](engine-rules.md#grid-and-ordinary-awards) before adapting this example.
 
 ## Configuring the one engine
 
@@ -187,4 +187,4 @@ configuration, not the engine class, request type, or result type. For a complet
 configuration assembled from JSON, use the tutorial and [field reference](configuration-reference.md).
 For custom C# evaluators, paylines and the paytable may be empty when unused.
 Custom policies must declare their symbol roles, capabilities, and payout bounds;
-see [the developer guide](implementation-guide.md) before implementing one.
+see [extension guidance](architecture.md#extend-a-policy) before implementing one.
