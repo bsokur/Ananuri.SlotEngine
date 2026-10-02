@@ -1,37 +1,17 @@
 # Ananuri.SlotEngine
 
 A .NET library that calculates slot-game boards, awards, payouts, cascades, and
-free-spin state from a game definition and externally supplied choices. This repository
-also contains a console simulator, executable examples, and xUnit tests.
+free-spin state from a game definition and externally supplied random draws.
+The repository includes a console simulator, executable examples, and regression tests.
 
-Initial release: **0.1.0**, with JSON package schema **1** and rule profile `slot-engine-v1`.
+One `SlotEngine` implements `ISlotEngine` for both plain-payline and featured games.
+The host owns players, balances, random allocation, persistence, concurrency, and
+settlement. The library is a calculator, not a game UI or server.
 
-**New to the engine? Begin with [Start here](docs/start-here.md).** It explains the
-tools, runs a predictable example, and takes you through one complete paid round.
-No knowledge of the source code is needed to start.
+## Start here
 
-## Learn in this order
-
-| Guide | What you learn |
-| --- | --- |
-| [Start here](docs/start-here.md) | What the library does, setup, build, test, and your first run |
-| [Simulation and game math](docs/simulation-and-math.md) | Run simulations, interpret RTP and volatility, and review current game settings |
-| [Terminology](docs/glossary.md) | Reels, stops, paylines, stakes, cascades, RTP, and state |
-| [One complete round](docs/first-round.md) | Actual boards and calculations: a paid spin plus two free spins |
-| [Create your first game](docs/create-a-game.md) | Edit a package, predict the change, and verify it |
-| [Integrate the engine](docs/integration.md) | A runnable separate console application and host responsibilities |
-| [Results and state](docs/results.md) | Every result/state field and how to interpret totals |
-| [Configuration reference](docs/configuration-reference.md) | Every JSON field, default, restriction, and strategy |
-| [Troubleshooting](docs/troubleshooting.md) | Setup, package validation, replay, and persistence errors |
-
-## Run it
-
-These development commands apply to the source checkout, not an installed NuGet
-package. The package includes the guides and sample data/source; code-map links into
-the library source also require the checkout.
-
-From the folder containing this README, using the .NET SDK 10.0.400 pinned in
-[global.json](global.json), run these commands one at a time:
+Use the .NET SDK **10.0.400** pinned in [global.json](global.json). Open
+`Ananuri.SlotEngine.sln` in Visual Studio, or run these commands from the repository:
 
 ```powershell
 dotnet restore Ananuri.SlotEngine.sln
@@ -40,58 +20,43 @@ dotnet test Ananuri.SlotEngine.sln -c Release --no-build --no-restore
 dotnet run --project tools/Ananuri.SlotEngine.Simulator -c Release --no-build -- tutorial
 ```
 
-The tutorial charges 100 units and pays 500, 300, and 600 across one paid spin and two
-free spins: 1,400 gross payout in total. It then verifies recorded replay. These are
-scripted teaching inputs, not an RTP estimate.
+The tutorial pays 500, 300, and 600 units across one paid spin and two free spins,
+then verifies replay. These scripted results are not an RTP estimate.
 
-Run the complete local verification and packaging sequence from PowerShell:
+## Essential guides
+
+| Guide | Purpose |
+| --- | --- |
+| [Start here](docs/start-here.md) | Setup, terminology, and the first round |
+| [Integration](docs/integration.md) | Runnable host examples, draws, persistence, and settlement |
+| [Configuration](docs/configuration-reference.md) | JSON fields, defaults, and restrictions |
+| [Results and state](docs/results.md) | Payout evidence, checkpoints, and bonus state |
+| [Engine rules](docs/engine-rules.md) | Calculation order, feature semantics, and policy contracts |
+| [Architecture](docs/architecture.md) | Component responsibilities, extension points, and development checks |
+| [Source walkthrough](docs/source-walkthrough.md) | Debugger path through a complete round |
+| [Simulation and math](docs/simulation-and-math.md) | Simulation commands, current game settings, RTP, and volatility |
+
+## Verify changes
 
 ```powershell
 ./scripts/verify.ps1
 ```
 
-The script checks formatting, tests, exact and seeded sample results, local documentation
-links, and package contents. It also compiles and runs both documented integration
-programs against the actual generated NuGet package. It stops at the first failure.
-It also compiles host fragments, exercises the game-creation tutorial, and checks
-the documented current-game settings and calibration fingerprint.
-Only PowerShell and .NET are required.
+This runs the Release build, formatting, tests, deterministic simulations/replay,
+documentation-link checks, and NuGet consumer examples. PowerShell and .NET are the
+only required runtimes. No package is published.
 
-In Visual Studio, open the existing solution, build it, and run Test Explorer.
-Use the terminal command above
-for the tutorial so its working directory and arguments are explicit.
+## Examples and compatibility
 
-## What is in the solution?
+[FirstGame.json](samples/FirstGame.json) and [TutorialExample.cs](samples/TutorialExample.cs)
+demonstrate checkpoints, free spins, and replay. [PaylineGame.json](samples/PaylineGame.json)
+is the small exact-enumeration fixture; [FiveReelGame.json](samples/FiveReelGame.json),
+[CascadingGame.json](samples/CascadingGame.json), and
+[CollectedSymbolsGame.json](samples/CollectedSymbolsGame.json) exercise other configurations.
+[CustomMultiplierExample.cs](samples/CustomMultiplierExample.cs) demonstrates policy extension.
+[Reference vectors](docs/reference-vectors.json) provide independently expected plain-payline outcomes.
 
-- **Ananuri.SlotEngine:** the reusable library. It has no external NuGet dependencies.
-- **Ananuri.SlotEngine.Simulator:** console tooling that calls the library.
-- **Ananuri.SlotEngine.Tests:** xUnit tests with mathematical expectations and regression cases.
-
-One `SlotEngine` implements `ISlotEngine` for every supported game. A `GameDefinition`
-selects win evaluation, cascades, features, multipliers, and an optional payout cap.
-Plain payline games use the same request and result types as games with free spins.
-The host supplies random allocations and owns players, balances, storage, concurrency,
-and settlement. The library provides neither a game UI nor a complete server.
-
-## Reference and development
-
-- [Architecture](docs/architecture.md): folders, components, and execution flow.
-- [Engine rules](docs/engine-rules.md): precise feature behavior and extension contracts.
-- [Plain-payline configuration](docs/plain-payline-rules.md): one-board games using the same engine.
-- [Developer guide](docs/implementation-guide.md): modifying and extending the current solution.
-- [Verification status](docs/verification.md): checks performed and their limits.
-
-Examples: [PaylineGame.json](samples/PaylineGame.json) (one board, no features or cap),
-[FiveReelGame.json](samples/FiveReelGame.json) (five-reel reference game),
-[FirstGame.json](samples/FirstGame.json) (the worked tutorial),
-[TutorialExample.cs](samples/TutorialExample.cs),
-[CascadingGame.json](samples/CascadingGame.json),
-[CollectedSymbolsGame.json](samples/CollectedSymbolsGame.json), and
-[fixed-payline reference vectors](docs/reference-vectors.json).
-
-CascadingGame is experimentally calibrated toward its documented payout targets.
-The other samples are untuned teaching/test fixtures; none is independently certified.
-Sample game definitions live in JSON. The simulator loads these files, and tests use
-the same files alongside independently calculated expected results. `TutorialExample.cs`
-demonstrates execution, checkpointing, and replay; it does not define game rules.
-Exact replay requires retained game and engine artifacts as well as recorded inputs.
+Library version: **0.1.0**. JSON schema: **1**. Rule profile: `slot-engine-v1`.
+The package ships these guides and samples; source-code links require the checkout.
+Exact replay requires retained game/engine artifacts and recorded inputs.
+Samples are experimental or teaching fixtures, not independently certified games.

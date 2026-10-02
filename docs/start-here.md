@@ -1,7 +1,7 @@
 # Start here: your first engine run
 
 This guide assumes you have never used this engine. You can run the examples before
-learning C#. The [glossary](glossary.md) explains the terms used throughout the guides.
+learning C#.
 
 ## What you have
 
@@ -31,6 +31,19 @@ definition. This learning path demonstrates several together. For a smaller firs
 integration, see the [plain-payline example](integration.md#a-complete-plain-payline-example).
 Library calls are synchronous calculations. The console examples need no server.
 
+| Term | Meaning |
+| --- | --- |
+| Reel / stop | A circular symbol list and the index of its top visible symbol. |
+| Board / grid | Visible cells addressed as `[reel, row]`; both indices start at zero. |
+| Payline / paytable | One row selected on each reel / awards for matching symbols and lengths. |
+| Line stake | Calculation stake divided equally among all configured paylines. |
+| Cascade | Remove winning cells, let survivors fall, refill, then evaluate the next grid. |
+| Spin | One paid or free spin, including all its cascades. |
+| Paid round | A paid spin and every free spin it awards, including retriggers. |
+| Raw / payable payout | Amount before / after applying the remaining round cap. Both are gross amounts, without subtracting stake. |
+| Continuation / bonus state | Resume the same unfinished spin / start the next free spin. |
+| RTP | Gross payouts divided by paid stakes across a distribution or sample. |
+
 ## 1. Prepare your tools
 
 Use a Windows terminal running PowerShell, or PowerShell on another supported .NET
@@ -48,7 +61,9 @@ Test-Path ./Ananuri.SlotEngine.sln
 ```
 
 The first result should be `10.0.400`; the final result should be `True`.
-If not, use [troubleshooting](troubleshooting.md) before continuing.
+If the SDK is unavailable, check `dotnet --list-sdks` and install the pinned version.
+Open the existing `.sln` file, not an old `.slnx` Recent entry. A missing solution
+usually means the terminal or IDE points at another location.
 
 ## 2. Build and test
 
@@ -90,16 +105,27 @@ always selects the first available choice, so this run does not estimate RTP.
 
 ## 4. Understand what happened
 
-Read [one complete round](first-round.md). It draws the boards, shows each calculation,
-and explains why the second free spin has a larger payout than the first.
+The example has three reels, two rows, and one payline on row 1. At stake 100,
+the paid board has three scatters above three A symbols. A pays `100 * 5 = 500`;
+the scatters request two free spins. A is removed, the scatters fall, and C refills
+the top row. That next grid loses, completing the paid spin and activating the bonus.
+
+Each free spin starts with B on the line. B's base award is `100 * 3 = 300`.
+The bonus multiplier applies its current value, then increases after a paying grid
+and persists into the next free spin. The two spins therefore pay 300 at 1x and 600
+at 2x. Each refills to a losing grid. Total gross payout is `500 + 300 + 600 = 1400`;
+only the original 100-unit stake was charged. Do not add cumulative round totals
+`500 + 800 + 1400` as separate payouts.
+
+To explore the implementation now, follow the [source walkthrough](source-walkthrough.md).
+It provides debugger breakpoints and expected state for this exact round.
 
 Then follow this order:
 
-1. [Create your first game](create-a-game.md): change one rule and predict the output.
-2. [Integrate the engine](integration.md): call it from a separate console application.
-3. [Read results and state](results.md): understand what to display, persist, and total.
-4. [Configuration reference](configuration-reference.md): look up every JSON setting.
-5. [Architecture](architecture.md) and [cascading rules](engine-rules.md): explore the implementation and precise semantics.
+1. [Integrate the engine](integration.md): call it from a separate console application.
+2. [Read results and state](results.md): understand what to display, persist, and total.
+3. [Configuration reference](configuration-reference.md): change game data and look up JSON settings.
+4. [Architecture](architecture.md) and [engine rules](engine-rules.md): explore the implementation and precise semantics.
 
 ## Other commands you will encounter
 

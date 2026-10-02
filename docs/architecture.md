@@ -1,7 +1,8 @@
 # Solution architecture
 
-This is the developer's code map. New readers should first follow [Start here](start-here.md)
-and [one complete round](first-round.md). The engine, simulator, and tests have one-way dependencies:
+This is the developer's code map. New readers should first follow [Start here](start-here.md).
+To follow the teaching round in a debugger,
+use the [source walkthrough](source-walkthrough.md). The engine, simulator, and tests have one-way dependencies:
 
 ```text
 Simulator ──► SlotEngine
@@ -9,9 +10,11 @@ Tests ──► SlotEngine, Simulator
 ```
 
 The engine calculates outcomes, and the simulator exercises them offline. Tests verify
-the library and simulator. Sample game definitions live in JSON. The simulator loads
+the library and simulator. The simulator's sample game definitions live in JSON. It loads
 copies from its output folder; tests embed
 the same JSON files as resources. These samples are not engine dependencies.
+The [custom-policy example](../samples/CustomMultiplierExample.cs) separately composes a teaching game in C#;
+its source is compiled into tests and shipped with the package.
 
 ## Solution Explorer
 
@@ -21,7 +24,7 @@ the same JSON files as resources. These samples are not engine dependencies.
 | Ananuri.SlotEngine.Tests | Tests grouped by mechanic, with shared fixtures |
 | Ananuri.SlotEngine.Simulator | The offline simulator project |
 | Samples | JSON game definitions and the executable tutorial host example |
-| Documentation | This guide, rule specifications, integration guidance and verification results |
+| Documentation | Setup, architecture, rules, configuration, integration, results, and game math |
 
 The projects appear directly under the solution. Samples and Documentation are
 solution navigation folders. The physical project paths remain `src/`, `tests/`, and `tools/`.
@@ -100,7 +103,7 @@ generates the initial board, chooses the paid/free-spin multiplier strategy and 
 
 1. Evaluate scatters, then ordinary wins with configured wild substitution and award selection.
 2. Apply the multiplier strategy and track collected symbol instances.
-3. Calculate raw awards and, when a cap is configured, apply the remaining round limit.
+3. Delegate raw awards, the remaining round limit, and cumulative totals to `GridPayoutCalculator`.
 4. Select removals. If the spin continues, apply gravity and refill through the draw sequence.
 5. Return the recorded step and updated continuation state.
 
@@ -109,11 +112,28 @@ cascade policy, the next board returns through the same evaluator. There is one
 payline implementation for both configurations.
 
 The coordinator completes the free-spin feature after the final grid, or returns a checkpoint
-when the work budget is exhausted. `SpinExecutionValidator` checks state and policy output
-invariants. `CascadeTransitionValidator` reconciles removals, survivors, fresh IDs, movements,
-and arrivals against both boards. `SpinStateSerializer` provides strict JSON loading for
-persisted continuations and bonus state. These helpers preserve evaluation order, random draw
-order, multiplier timing, cap handling and fingerprint calculation for valid inputs.
+when the work budget is exhausted. Execution responsibilities have separate owners:
+
+| Component | Responsibility |
+| --- | --- |
+| `SlotEngine` | Spin lifecycle, work budget, and feature completion |
+| `GridStepEvaluator` | Ordered policy calls, cascade execution, and next-grid state |
+| [GridPayoutCalculator](../src/Ananuri.SlotEngine/Execution/GridPayoutCalculator.cs) | Raw award evidence, payable amount after the round cap, and cumulative spin/round totals |
+| [SpinRequestValidator](../src/Ananuri.SlotEngine/Execution/SpinRequestValidator.cs) | Request identity, supported stake, and bonus compatibility |
+| [SpinContinuationValidator](../src/Ananuri.SlotEngine/Execution/SpinContinuationValidator.cs) | Checkpoint identity, counters, totals, reel stops, and tracked instances |
+| [SymbolBoardValidator](../src/Ananuri.SlotEngine/Execution/SymbolBoardValidator.cs) | Board dimensions, declared symbols, and instance sequence, shared by checkpoints and cascades |
+| [WinAwardValidator](../src/Ananuri.SlotEngine/Execution/WinAwardValidator.cs) | Ordinary award positions, substitutions, and declared payout bounds |
+| [ScatterResultValidator](../src/Ananuri.SlotEngine/Execution/ScatterResultValidator.cs) | Scatter evidence, counted instances, payout bounds, and feature capability |
+| `MultiplierResultValidator` | Multiplier bounds and collection evidence before updating the collected-instance set |
+| `CascadeTransitionValidator` | Removals, survivors, fresh IDs, movements, and arrivals against both boards |
+| `FeatureTransitionValidator` | Outgoing grants and bonus state at spin completion |
+
+These helpers are internal; the public policy interfaces remain the extension points.
+The payout calculator does not advance multiplier/bonus state or consume draws. Coordinators
+retain ordering and lifecycle decisions instead of distributing the workflow among validators.
+`SpinStateSerializer` provides strict JSON loading for persisted continuations and bonus state.
+The separation preserves evaluation order, random draw order, multiplier timing, cap handling,
+and fingerprint calculation for valid inputs.
 
 The host owns random allocation, persistence and settlement. A `BonusState` carries free-spin
 counters and, when configured, the multiplier across spins. A `SpinContinuation` resumes the
@@ -135,6 +155,8 @@ is supplied explicitly for each evaluation.
 
 `GameSimulation` drives a paid spin and all its associated free spins before recording a
 complete round. `GameStatistics` owns accumulation; `GameReport` owns presentation.
+For plain-payline runs, `FixedPaylineSimulation` coordinates execution, `PaylineStatistics`
+accumulates outcomes, and `PaylineReport` formats the demo and summary output.
 `game-demo` and `game-simulate` accept packages with or without cascades. Scripted replay runs
 after the processing timer stops. A finite grid and spin budget covers the paid spin
 and its entire bonus. Exceeding either budget or cancelling stops the command with
@@ -143,8 +165,8 @@ an error; an incomplete round is never included in a successful simulation repor
 The `tutorial` command calls the linked `samples/TutorialExample.cs` host example with
 the bundled `FirstGame.json`. It intentionally uses scripted choices and a one-grid work
 budget to demonstrate JSON checkpoints, free-spin persistence, and complete replay.
-Tests reference the simulator assembly to exercise this same compiled example and check
-the documented expectations without compiling a second copy.
+The verification script runs this command and also compiles the shipped example against
+the generated NuGet package to check its documented results.
 
 ## Tests and reading order
 
@@ -152,7 +174,8 @@ Tests are grouped into `FixedPaylines`, `Cascading`, `Grid`, `Wilds`, `Scatters`
 `Multipliers`, `Limits`, `Randomness`, `Configuration`, and `Simulator`. `Fixtures/EngineFixtures.cs`
 contains shared definitions and deterministic draw sources.
 
-For a first walkthrough:
+The [guided debugger path](source-walkthrough.md) gives breakpoints and expected values
+for the paid win, checkpoint, and free-spin completion. For a broader code tour:
 
 1. Open `samples/FirstGame.json` and `Definitions/GameDefinition.cs`.
 2. Read `Spins/SpinRequest.cs`, `Spins/SpinEvaluation.cs`, and `FreeSpins/BonusState.cs`.
@@ -160,6 +183,63 @@ For a first walkthrough:
 4. Read the interface and implementation for the mechanic you want to change, then its tests.
 5. Follow the simulator's `Commands/GameSimulation.cs` to see complete-round execution.
 
-For exact behavior and integration examples, continue with [engine rules](engine-rules.md).
-The plain-payline configuration contract is [plain-payline-rules.md](plain-payline-rules.md).
-Executed checks are recorded in [verification.md](verification.md).
+For exact behavior and integration examples, continue with [engine rules](engine-rules.md)
+and [integration](integration.md).
+
+## Extend a policy
+
+Prefer changing [game configuration](configuration-reference.md) for data-only changes.
+For a new mechanic, specify timing, symbol roles, payout bounds, state, and draw consumption
+before implementing the corresponding interface. Keep policies immutable and deterministic;
+include all behavior settings and an implementation version in `ConfigurationKey`.
+Do not use hidden mutable state, clocks, or unrecorded randomness.
+
+| Interface | Declarations checked during composition |
+| --- | --- |
+| `IWinEvaluator` | Paying symbols, substitution symbols, and `MaximumBasePayout(game, calculationStake)` |
+| `ISymbolSubstitutionPolicy` | Every symbol involved in substitution |
+| `IScatterEvaluator` | Scatter symbols, free-spin capability, and maximum award multiplier |
+| `IMultiplierStrategy` | Collection symbols, multiplier bounds, and persistence |
+| `ICascadePolicy` / `IRefillPolicy` | Every possible replacement symbol in both modes |
+| `IFeaturePolicy` | Whether free spins are supported |
+
+Return immutable sets, including empty sets for unused roles. An evaluator's `BigInteger`
+bound covers the sum of ordinary base awards for one grid at each allowed stake, before
+feature multipliers. It must be conservative even when a round cap is configured.
+Execution also validates policy output; invalid output raises an error, not a losing result.
+
+[CustomMultiplierExample.cs](../samples/CustomMultiplierExample.cs) is a complete example:
+`FirstGridMultiplier` applies a configured factor on grid 0 and 1x on subsequent grids.
+It uses the persisted grid index rather than mutable flags. `AppliedMultiplier` controls
+the current award; `NextState` is retained separately. Both must respect the declared bounds.
+Include the sample source in a console project referencing the library, then run:
+
+```csharp
+using Ananuri.SlotEngine.Samples;
+
+var result = CustomMultiplierExample.Run();
+Console.WriteLine($"Payout: {result.TotalPayoutUnits}");
+```
+
+The fixed example pays `200 * 3 + 100 * 1 = 700` units across three grids and nine draws.
+The final grid loses. These scripted choices demonstrate the policy, not RTP.
+The sample's tests compare full evaluation with serialized resumptions using fresh policies.
+
+Direct C# composition accepts custom policies. JSON intentionally selects reviewed built-ins;
+adding a name alone does not load a class. JSON support requires explicit DTO/compiler,
+validation, and reference updates. Not every future mechanic fits the current board and
+free-spin lifecycle; define new contracts when needed rather than duplicating the engine.
+
+## Verify a change
+
+Use independently calculated expected results and test observable contracts, especially
+award arithmetic, caps, feature timing, rejected state, and full versus resumed replay.
+Run `./scripts/verify.ps1` for Release build, formatting, tests, deterministic simulator
+scenarios, documentation links, package contents, and runnable packaged examples.
+Simulation regressions are not proof of exact game mathematics or production readiness.
+
+Changing award selection, draw ordering, timing, or state can break historical replay.
+Version changed behavior and retain exact prior packages and engine artifacts. Never bypass
+compatibility checks by replacing fingerprints on an active bonus or checkpoint.
+Update the appropriate rule, configuration, or result reference alongside contract changes.
+The host remains responsible for durable random allocation, concurrency, recovery, and settlement.

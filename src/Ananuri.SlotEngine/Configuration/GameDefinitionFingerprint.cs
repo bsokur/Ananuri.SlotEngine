@@ -1,5 +1,4 @@
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using Ananuri.SlotEngine.Definitions;
 
@@ -9,7 +8,7 @@ internal static class GameDefinitionFingerprint
 {
     internal static string Compute(GameDefinition game)
     {
-        var canonical = JsonSerializer.Serialize(new
+        var canonical = JsonSerializer.SerializeToUtf8Bytes(new
         {
             game.GameId,
             game.MathVersion,
@@ -25,6 +24,6 @@ internal static class GameDefinitionFingerprint
             game.AllowScatterRefills,
             Rules = SlotEngine.RulesVersion
         });
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
+        return Convert.ToHexString(SHA256.HashData(canonical));
     }
 }

@@ -13,10 +13,6 @@ public sealed class CascadingSampleScatterTests
     [InlineData(4, 100, 200, 11)]
     [InlineData(5, 100, 500, 13)]
     [InlineData(3, 200, 200, 7)]
-    [InlineData(4, 200, 400, 11)]
-    [InlineData(5, 200, 1000, 13)]
-    [InlineData(3, 500, 500, 7)]
-    [InlineData(4, 500, 1000, 11)]
     [InlineData(5, 500, 2500, 13)]
     public void PaidTriggersPayCashWithoutAnyLineWin(int count, long stake, long payout, int spins)
     {

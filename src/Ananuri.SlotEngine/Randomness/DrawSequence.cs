@@ -17,14 +17,16 @@ public sealed class DrawSequence
     public string EvaluationId { get; }
     public long NextOrdinal { get; private set; }
     /// <summary>Requests an integer in [0, upperBound), validates the result, and advances the ordinal after a successful draw.</summary>
+    /// <exception cref="OverflowException">The next ordinal cannot be represented; no draw is requested.</exception>
     public int Next(string purpose, int upperBound)
     {
         if (upperBound <= 0) throw new ArgumentOutOfRangeException(nameof(upperBound));
+        long nextOrdinal = checked(NextOrdinal + 1);
         var request = new DrawRequest(EvaluationId, NextOrdinal, purpose, upperBound);
         int value = _source.Next(request);
         if (value < 0 || value >= upperBound)
             throw new InvalidOperationException($"Draw {NextOrdinal} is outside its requested range.");
-        NextOrdinal++;
+        NextOrdinal = nextOrdinal;
         return value;
     }
 }

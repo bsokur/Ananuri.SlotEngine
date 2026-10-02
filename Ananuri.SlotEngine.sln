@@ -17,24 +17,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{B81C
 		samples\FirstGame.json = samples\FirstGame.json
 		samples\PaylineGame.json = samples\PaylineGame.json
 		samples\TutorialExample.cs = samples\TutorialExample.cs
+		samples\CustomMultiplierExample.cs = samples\CustomMultiplierExample.cs
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{7E97836E-DF7B-5743-AC56-6BE174CF85EB}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 		docs\start-here.md = docs\start-here.md
-		docs\glossary.md = docs\glossary.md
-		docs\first-round.md = docs\first-round.md
-		docs\create-a-game.md = docs\create-a-game.md
 		docs\integration.md = docs\integration.md
 		docs\results.md = docs\results.md
 		docs\configuration-reference.md = docs\configuration-reference.md
-		docs\troubleshooting.md = docs\troubleshooting.md
 		docs\architecture.md = docs\architecture.md
 		docs\engine-rules.md = docs\engine-rules.md
-		docs\plain-payline-rules.md = docs\plain-payline-rules.md
-		docs\implementation-guide.md = docs\implementation-guide.md
-		docs\verification.md = docs\verification.md
+		docs\source-walkthrough.md = docs\source-walkthrough.md
 		docs\simulation-and-math.md = docs\simulation-and-math.md
 		docs\reference-vectors.json = docs\reference-vectors.json
 	EndProjectSection

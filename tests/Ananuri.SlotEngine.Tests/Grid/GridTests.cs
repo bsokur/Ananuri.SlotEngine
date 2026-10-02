@@ -42,4 +42,35 @@ public sealed class GridTests
         Assert.Throws<ArgumentOutOfRangeException>(() => board[0, 2]);
         Assert.Throws<ArgumentException>(() => new SymbolBoard(1, 2, new[] { new SymbolInstance(0, A), new SymbolInstance(0, B) }));
     }
+
+    [Fact]
+    public void InsufficientInstanceIds_ShouldFailBeforeAnyRefillDraws()
+    {
+        var game = WildGame();
+        var tape = new Tape(0, 0);
+        var draws = new DrawSequence("exhausted", tape);
+
+        Assert.Throws<OverflowException>(() => game.Cascades.Apply(game, SpinMode.Paid, Board(A, A, A, A, A),
+            [new(0, 0), new(1, 0)], long.MaxValue - 1, draws));
+
+        Assert.Equal(0, tape.Used);
+        Assert.Equal(0, draws.NextOrdinal);
+    }
+
+    [Fact]
+    public void LastRepresentableInstanceIds_ShouldAllocateOncePerUniqueRemoval()
+    {
+        var game = WildGame();
+        var tape = new Tape(0, 0);
+        var draws = new DrawSequence("last-ids", tape);
+
+        var transition = game.Cascades.Apply(game, SpinMode.Paid, Board(A, A, A, A, A),
+            [new(0, 0), new(1, 0), new(0, 0)], long.MaxValue - 2, draws);
+
+        Assert.Equal(long.MaxValue, transition.NextInstanceId);
+        Assert.Equal(new[] { long.MaxValue - 2, long.MaxValue - 1 }, transition.Arrivals.Select(a => a.Instance.Id));
+        Assert.Equal(2, transition.Removed.Length);
+        Assert.Equal(2, tape.Used);
+        Assert.Equal(2, draws.NextOrdinal);
+    }
 }

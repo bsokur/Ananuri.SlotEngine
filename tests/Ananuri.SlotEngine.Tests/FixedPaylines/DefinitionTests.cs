@@ -12,16 +12,36 @@ public sealed class DefinitionTests
         IEnumerable<Payline>? paylines = null,
         IEnumerable<PaytableEntry>? payouts = null,
         BetDefinition? bets = null,
-        int rows = 2) => new("validation-test", "1", rows,
+        int rows = 2,
+        IEnumerable<ReelStrip>? freeSpinReels = null) => new("validation-test", "1", rows,
             symbols ?? new[] { A },
             reels ?? Enumerable.Range(0, 3).Select(_ => new ReelStrip(new[] { A })),
             paylines ?? new[] { new Payline(0, new[] { 0, 0, 0 }) },
             payouts ?? new[] { new PaytableEntry(A, 3, 5) },
-            bets ?? new BetDefinition(new long[] { 100 }));
+            bets ?? new BetDefinition(new long[] { 100 }), freeSpinReels: freeSpinReels);
 
     [Fact]
     public void Constructor_ShouldRejectGame_WhenReelUsesUndeclaredSymbol() =>
         Assert.Throws<ArgumentException>(() => Create(symbols: new[] { B }));
+
+    [Theory]
+    [InlineData("reel-count")]
+    [InlineData("null-reel")]
+    [InlineData("undeclared-symbol")]
+    public void Constructor_ShouldRejectGame_WhenFreeSpinReelsAreInvalid(string invalid)
+    {
+        ReelStrip[] reels = invalid switch
+        {
+            "reel-count" => [new([A])],
+            "null-reel" => [new([A]), null!, new([A])],
+            "undeclared-symbol" => [new([A]), new([B]), new([A])],
+            _ => throw new ArgumentOutOfRangeException(nameof(invalid))
+        };
+
+        var error = Assert.Throws<ArgumentException>(() => Create(freeSpinReels: reels));
+
+        Assert.Contains("Free-spin reels", error.Message);
+    }
 
     [Fact]
     public void Constructor_ShouldRejectGame_WhenPaylineRowIsOutsideGrid() =>

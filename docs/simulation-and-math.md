@@ -178,4 +178,4 @@ Do not average run standard deviations or confidence bounds. The between-run ter
 is necessary. Printed standard deviations are rounded, so pooling logs is approximate.
 Pool hit and bonus counts over total rounds; weight reported percentages by round
 count if counts are unavailable. Longer validation is separate from
-[quick verification](verification.md), which checks regressions rather than recalibrating.
+[quick verification](architecture.md#verify-a-change), which checks regressions rather than recalibrating.

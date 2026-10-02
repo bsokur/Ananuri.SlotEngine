@@ -1,7 +1,7 @@
 # Slot engine rules and component contracts
 
-This is the detailed rule reference. First-time readers should use [Start here](start-here.md),
-[the worked round](first-round.md), and [the configuration field reference](configuration-reference.md).
+This is the detailed rule reference. First-time readers should use [Start here](start-here.md)
+and [the configuration field reference](configuration-reference.md).
 
 Version 0.1.0 exposes one coordinator: `ISlotEngine` / `SlotEngine` in
 `Ananuri.SlotEngine`. It accepts `GameDefinition` from `Ananuri.SlotEngine.Definitions`
@@ -33,26 +33,9 @@ configured refill weights.
 
 ## Reusable definitions and components
 
-Load a package once and cache the resulting `GameDefinition`:
-
-The following is a host integration fragment: `runtimeDrawSource` is supplied by your
-application. For a complete executable example with every dependency defined, follow
-[integration](integration.md) or run the `tutorial` command.
-
-```csharp
-using Ananuri.SlotEngine;
-using Ananuri.SlotEngine.Configuration;
-using Ananuri.SlotEngine.Randomness;
-using Ananuri.SlotEngine.Spins;
-
-var game = GamePackageLoader.Load(File.ReadAllText("game.json"));
-ISlotEngine engine = new SlotEngine();
-
-// supplied by the host: durable, trusted random allocation/replay implementation
-IRandomDrawSource draws = runtimeDrawSource;
-var request = new SpinRequest("unique-evaluation-id", 100);
-var result = engine.Evaluate(game, request, draws);
-```
+Load a package once and cache the resulting `GameDefinition`. Use `SlotEngine.Evaluate`
+with a `SpinRequest` and host-supplied `IRandomDrawSource`. The [integration guide](integration.md)
+contains complete runnable programs, including the minimal one-board configuration.
 
 `GamePackageLoader.Load` accepts strict JSON. Unknown members, duplicate object keys,
 unsupported profiles/strategies, missing required fields, and incompatible roles are
@@ -83,7 +66,7 @@ Configuration validation checks declared symbols, role conflicts, scatter refill
 permission, and whether scatter grants have a compatible free-spin feature.
 `IWinEvaluator` also declares a conservative `BigInteger` bound on total ordinary
 base payout for a grid at each stake. These checks apply to custom implementations
-as well as built-ins; see [the developer guide](implementation-guide.md) for the
+as well as built-ins; see [extension guidance](architecture.md#extend-a-policy) for the
 required members.
 
 The JSON profile uses the payline evaluator and reel-strip grid generator. Select
@@ -102,7 +85,9 @@ evaluator may use different rules and may omit paylines and the paytable when
 constructed through C#; it must declare its paying symbols and payout bound.
 The JSON profile always uses the built-in evaluator.
 
-- The initial stop identifies the top visible symbol. Windows wrap around strips.
+- Symbol IDs are non-negative integers; zero is valid. Every reference must name a declared symbol.
+- The initial stop identifies the top visible symbol. Windows wrap around strips;
+  a window taller than its strip intentionally repeats symbols.
 - Base and free-spin reel sets are separately configurable; omitted free reels reuse
   the base set. Dimensions and declared symbols must agree.
 - Cells are reel-major and carry an immutable symbol-instance ID. Gravity preserves
@@ -111,7 +96,8 @@ The JSON profile always uses the built-in evaluator.
 - For every paying target symbol, the evaluator counts a left-to-right qualifying run.
   Exact symbol equality and permitted wild substitution both qualify.
 - For each target, the longest defined qualifying entry is selected; missing lengths
-  fall back to shorter entries, retaining the original paytable convention.
+  fall back to shorter entries, retaining the original paytable convention. There is
+  no hardcoded three-match minimum. Only positions in the awarded length contribute.
 - Candidate awards are compared by base payout, then awarded length, then configured
   symbol priority, then numeric symbol ID. Only one candidate pays per line.
 - Wilds may have own-symbol awards if the paytable contains them. Wilds do not
@@ -125,6 +111,13 @@ The JSON profile always uses the built-in evaluator.
   from initial strips; each draw is mapped through positive integer weights.
 - Replacements are independent weighted draws, not strip continuation. Free-spin
   refill tables may differ; omitted free tables reuse paid tables.
+
+All monetary amounts are checked signed 64-bit integers in a host-defined unit scale.
+The engine does not infer currency or decimal places. A permitted positive total stake
+divides evenly among active lines; paytable multipliers are positive integers applied
+to line stake. Returned payout is gross: stake is neither subtracted nor added back.
+Probability assumptions belong to the draw source and game analysis; the engine validates
+draw ranges, not their distribution.
 
 ## Scatter rules
 
@@ -241,15 +234,8 @@ output raises an error; it is never converted into a loss.
 the result has `CompletionReason.WorkBudget`, `IsComplete == false`, and a continuation
 at the next grid boundary. No bonus spin is consumed until evaluation completes.
 
-```csharp
-var result = engine.Evaluate(game, request, draws, maxGridEvaluations: 100);
-while (result.Continuation is not null)
-{
-    // In production, retain prior Steps and persist checkpoints/draw allocation.
-    result = engine.Resume(game, result.Continuation, draws, maxGridEvaluations: 100);
-}
-// Persist the completed outcome and NextBonus consistently, then settle idempotently.
-```
+Pass the returned continuation to `Resume` until the spin completes. The runnable
+[integration example](integration.md) demonstrates checkpoint serialization and this loop.
 
 `Steps` contains only the steps produced by that call. `TotalPayoutUnits` is cumulative
 for the spin, and `RoundPayoutUnits` includes its originating paid spin and earlier

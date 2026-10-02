@@ -34,17 +34,29 @@ public sealed class FreeSpinsFeature : IFeaturePolicy
     public FeatureTransition Complete(GameDefinition game, SpinRequest request,
         long pendingFreeSpins, long multiplier, long roundPayout, bool winLimitReached)
     {
-        if (winLimitReached) return new(null, 0);
-        var previous = request.Bonus;
-        int grant = (int)Math.Min(pendingFreeSpins, MaximumAwardedSpins - (previous?.TotalSpinsAwarded ?? 0));
-        int total = (previous?.TotalSpinsAwarded ?? 0) + grant;
-        int completed = previous is null ? 0 : previous.CompletedSpins + 1;
-        int remaining = total - completed;
-        if (remaining == 0) return new(null, grant);
-        long nextMultiplier = previous is not null && game.BonusMultiplier.Persistence == MultiplierPersistence.Bonus
+        if (winLimitReached) return new(Bonus: null, GrantedFreeSpins: 0);
+
+        var previousBonus = request.Bonus;
+        int grantedFreeSpins = (int)Math.Min(pendingFreeSpins, MaximumAwardedSpins - (previousBonus?.TotalSpinsAwarded ?? 0));
+        int totalSpinsAwarded = (previousBonus?.TotalSpinsAwarded ?? 0) + grantedFreeSpins;
+        // Completing the triggering paid spin grants a bonus without consuming one of its free spins.
+        int completedSpins = previousBonus is null ? 0 : previousBonus.CompletedSpins + 1;
+        int remainingSpins = totalSpinsAwarded - completedSpins;
+        if (remainingSpins == 0) return new(Bonus: null, GrantedFreeSpins: grantedFreeSpins);
+
+        long nextMultiplier = previousBonus is not null && game.BonusMultiplier.Persistence == MultiplierPersistence.Bonus
             ? multiplier : game.BonusMultiplier.Start;
-        return new(new BonusState(previous?.OriginatingRoundId ?? request.EvaluationId, game.Fingerprint,
-            SlotEngine.EngineVersion, SlotEngine.RulesVersion, request.CalculationStakeUnits,
-            remaining, total, completed, nextMultiplier, roundPayout), grant);
+        var nextBonus = new BonusState(
+            OriginatingRoundId: previousBonus?.OriginatingRoundId ?? request.EvaluationId,
+            GameFingerprint: game.Fingerprint,
+            EngineVersion: SlotEngine.EngineVersion,
+            RulesVersion: SlotEngine.RulesVersion,
+            CalculationStakeUnits: request.CalculationStakeUnits,
+            RemainingSpins: remainingSpins,
+            TotalSpinsAwarded: totalSpinsAwarded,
+            CompletedSpins: completedSpins,
+            Multiplier: nextMultiplier,
+            RoundPayoutUnits: roundPayout);
+        return new(Bonus: nextBonus, GrantedFreeSpins: grantedFreeSpins);
     }
 }

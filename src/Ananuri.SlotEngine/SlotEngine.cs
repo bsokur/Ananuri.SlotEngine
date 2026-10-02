@@ -1,6 +1,6 @@
-using Ananuri.SlotEngine.Definitions;
 using System.Collections.Immutable;
 using System.Reflection;
+using Ananuri.SlotEngine.Definitions;
 using Ananuri.SlotEngine.Execution;
 using Ananuri.SlotEngine.FreeSpins;
 using Ananuri.SlotEngine.Multipliers;
@@ -22,17 +22,31 @@ public sealed class SlotEngine : ISlotEngine
     public SpinEvaluation Evaluate(GameDefinition game, SpinRequest request,
         IRandomDrawSource draws, int maxGridEvaluations = 1_000)
     {
-        SpinExecutionValidator.ValidateRequest(game, request);
+        SpinRequestValidator.Validate(game, request);
         ArgumentNullException.ThrowIfNull(draws);
         if (maxGridEvaluations <= 0) throw new ArgumentOutOfRangeException(nameof(maxGridEvaluations));
+
         var sequence = new DrawSequence(request.EvaluationId, draws);
         var generated = game.GridGenerator.Generate(game, request.Mode, sequence);
-        var strategy = Strategy(game, request.Mode);
-        long multiplier = request.Bonus is not null && strategy.Persistence == MultiplierPersistence.Bonus
-            ? request.Bonus.Multiplier : strategy.Start;
-        var state = new SpinContinuation(game.Fingerprint, SlotEngine.EngineVersion, RulesVersion, request,
-            generated.Grid, generated.ReelStops, generated.NextInstanceId, 0, sequence.NextOrdinal, multiplier,
-            ImmutableHashSet<long>.Empty, ImmutableHashSet<long>.Empty, 0, request.Bonus?.RoundPayoutUnits ?? 0, 0);
+        var multiplierStrategy = SelectMultiplierStrategy(game, request.Mode);
+        long startingMultiplier = request.Bonus is not null && multiplierStrategy.Persistence == MultiplierPersistence.Bonus
+            ? request.Bonus.Multiplier : multiplierStrategy.Start;
+        var state = new SpinContinuation(
+            GameFingerprint: game.Fingerprint,
+            EngineVersion: EngineVersion,
+            RulesVersion: RulesVersion,
+            Request: request,
+            Grid: generated.Grid,
+            InitialStops: generated.ReelStops,
+            NextInstanceId: generated.NextInstanceId,
+            NextGridIndex: 0,
+            NextDrawOrdinal: sequence.NextOrdinal,
+            Multiplier: startingMultiplier,
+            CollectedInstanceIds: ImmutableHashSet<long>.Empty,
+            CountedScatterInstanceIds: ImmutableHashSet<long>.Empty,
+            SpinPayoutUnits: 0,
+            RoundPayoutUnits: request.Bonus?.RoundPayoutUnits ?? 0,
+            PendingFreeSpins: 0);
         return Resume(game, state, draws, maxGridEvaluations);
     }
 
@@ -40,39 +54,60 @@ public sealed class SlotEngine : ISlotEngine
         IRandomDrawSource draws, int maxGridEvaluations = 1_000)
     {
         ArgumentNullException.ThrowIfNull(continuation);
-        SpinExecutionValidator.ValidateRequest(game, continuation.Request);
+        SpinRequestValidator.Validate(game, continuation.Request);
         ArgumentNullException.ThrowIfNull(draws);
         if (maxGridEvaluations <= 0) throw new ArgumentOutOfRangeException(nameof(maxGridEvaluations));
-        SpinExecutionValidator.ValidateContinuation(game, continuation);
+        SpinContinuationValidator.Validate(game, continuation);
+
         var state = continuation;
         var request = state.Request;
         var sequence = new DrawSequence(request.EvaluationId, draws, state.NextDrawOrdinal);
-        var strategy = Strategy(game, request.Mode);
+        var multiplierStrategy = SelectMultiplierStrategy(game, request.Mode);
         var steps = ImmutableArray.CreateBuilder<CascadeStep>();
-        for (int processed = 0; processed < maxGridEvaluations; processed++)
+        for (int evaluatedGridCount = 0; evaluatedGridCount < maxGridEvaluations; evaluatedGridCount++)
         {
-            var evaluated = GridStepEvaluator.Evaluate(game, state, strategy, sequence);
-            state = evaluated.State;
-            steps.Add(evaluated.Step);
-            if (evaluated.IsComplete)
+            var gridResult = GridStepEvaluator.Evaluate(game, state, multiplierStrategy, sequence);
+            state = gridResult.State;
+            steps.Add(gridResult.Step);
+            if (gridResult.IsComplete)
             {
-                var feature = game.Features.Complete(game, request, state.PendingFreeSpins,
-                    state.Multiplier, state.RoundPayoutUnits, evaluated.WinLimitReached);
-                FeatureTransitionValidator.Validate(game, state, feature, evaluated.WinLimitReached);
-                return Result(game, state, steps.ToImmutable(), feature,
-                    evaluated.WinLimitReached ? CompletionReason.WinLimit : CompletionReason.NoMoreWins, null);
+                // Scatter requests become actual free-spin grants only after the spin's final grid.
+                var featureTransition = game.Features.Complete(game, request, state.PendingFreeSpins,
+                    state.Multiplier, state.RoundPayoutUnits, gridResult.WinLimitReached);
+                FeatureTransitionValidator.Validate(game, state, featureTransition, gridResult.WinLimitReached);
+                return CreateSpinEvaluation(game, state, steps.ToImmutable(), featureTransition,
+                    gridResult.WinLimitReached ? CompletionReason.WinLimit : CompletionReason.NoMoreWins,
+                    continuation: null);
             }
         }
-        return Result(game, state, steps.ToImmutable(), new FeatureTransition(null, 0), CompletionReason.WorkBudget, state);
+
+        // A checkpoint resumes this same spin; it does not start the next free spin.
+        return CreateSpinEvaluation(game, state, steps.ToImmutable(),
+            new FeatureTransition(Bonus: null, GrantedFreeSpins: 0), CompletionReason.WorkBudget, continuation: state);
     }
 
-    private static SpinEvaluation Result(GameDefinition game, SpinContinuation state,
-        ImmutableArray<CascadeStep> steps, FeatureTransition feature, CompletionReason reason, SpinContinuation? continuation) =>
-        new(state.Request.EvaluationId, game.GameId, game.MathVersion, game.Fingerprint,
-            SlotEngine.EngineVersion, RulesVersion, state.Request.Mode, state.Request.ChargedStakeUnits,
-            state.Request.CalculationStakeUnits, state.Request.Bonus, state.InitialStops, steps,
-            state.SpinPayoutUnits, state.RoundPayoutUnits, feature.GrantedFreeSpins, feature.Bonus, reason, continuation);
+    private static SpinEvaluation CreateSpinEvaluation(GameDefinition game, SpinContinuation state,
+        ImmutableArray<CascadeStep> steps, FeatureTransition featureTransition, CompletionReason reason, SpinContinuation? continuation) =>
+        new(
+            EvaluationId: state.Request.EvaluationId,
+            GameId: game.GameId,
+            MathVersion: game.MathVersion,
+            GameFingerprint: game.Fingerprint,
+            EngineVersion: EngineVersion,
+            RulesVersion: RulesVersion,
+            Mode: state.Request.Mode,
+            ChargedStakeUnits: state.Request.ChargedStakeUnits,
+            CalculationStakeUnits: state.Request.CalculationStakeUnits,
+            StartingBonus: state.Request.Bonus,
+            InitialStops: state.InitialStops,
+            Steps: steps,
+            TotalPayoutUnits: state.SpinPayoutUnits,
+            RoundPayoutUnits: state.RoundPayoutUnits,
+            GrantedFreeSpins: featureTransition.GrantedFreeSpins,
+            NextBonus: featureTransition.Bonus,
+            CompletionReason: reason,
+            Continuation: continuation);
 
-    private static IMultiplierStrategy Strategy(GameDefinition game, SpinMode mode) =>
+    private static IMultiplierStrategy SelectMultiplierStrategy(GameDefinition game, SpinMode mode) =>
         mode == SpinMode.Paid ? game.PaidMultiplier : game.BonusMultiplier;
 }

@@ -3,7 +3,7 @@
 This page covers every field accepted by `GamePackageLoader.Load` for schema 1 and
 profile `slot-engine-v1`. Start with [PaylineGame.json](../samples/PaylineGame.json) for
 the simplest included package, or [FirstGame.json](../samples/FirstGame.json) for
-[the editing tutorial](create-a-game.md). The loader builds a
+the [teaching round](start-here.md#4-understand-what-happened). The loader builds a
 `GameDefinition` used by `SlotEngine`, with or without cascades.
 
 Property names use the exact camelCase spelling shown below. JSON accepts no comments,
@@ -223,8 +223,22 @@ This profile always uses paylines and circular initial strips. Cascades are eith
 disabled or use weighted independent refills and downward gravity. It cannot select ways, clusters, sticky/expanding wilds,
 fractional multipliers, arbitrary scripts, or a different cascade algorithm by adding
 JSON fields. Custom policy composition is available through the C# API.
-See [the developer guide](implementation-guide.md).
+See [extension guidance](architecture.md#extend-a-policy).
 
 Loading validates configuration consistency and arithmetic capacity. It does not
 prove RTP, reachable maximum wins, desirable game behavior, or production readiness.
-Use the [troubleshooting table](troubleshooting.md) for rejected packages.
+For rejected packages, check the reported field against its restrictions above; do not
+bypass role conflicts or overflow bounds merely because a configured cap is lower.
+
+## Edit a game safely
+
+Copy a sample outside `samples/` before experimenting, so it is not included in the shipped
+package. Change its `gameId` and `mathVersion`, then change one rule and calculate an
+expected result before running it. For example, changing FirstGame's symbol 1 multiplier
+from 5 to 6 makes its scripted paid payout 600 and complete-round payout 1,500.
+
+Pass the edited JSON path explicitly to `tutorial` or `game-simulate`; it is loaded afresh
+without rebuilding C#. Default commands use copies beside the simulator executable,
+which require rebuilding after source JSON changes. Keep regression cases for promoted
+changes and retain immutable historical packages. Never apply an edited package to an
+unfinished spin or bonus by replacing its fingerprint.
